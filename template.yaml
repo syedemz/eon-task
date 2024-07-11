@@ -1,0 +1,246 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Eon-Task
+
+  Sample SAM Template for Eon-Task
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+    LoggingConfig:
+      LogFormat: JSON
+Description: >
+  Create resources for eon task
+
+
+Resources:
+  EonLambdaSQSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: eon-lambda-sqs-role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+        - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess
+  
+  EonLambdaFileProcessorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: eon-lambda-file-processor-role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+  
+
+  EonTransferRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: 'eon-transfer-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'transfer.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'eon-ingest-SFTPS3ReadWrite'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: 'AllowListingOfUserFolder'
+                Action:
+                  - 's3:ListBucket'
+                  - 's3:GetBucketLocation'
+                Effect: 'Allow'
+                Resource:
+                  - 'arn:aws:s3:::eon-s3bronze'
+              - Sid: 'HomeDirObjectAccess'
+                Effect: 'Allow'
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:DeleteObjectVersion'
+                  - 's3:DeleteObject'
+                  - 's3:GetObjectVersion'
+                Resource: 'arn:aws:s3:::eon-s3bronze/*'
+
+  StateMachineExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement: 
+          - Effect: 'Allow'
+            Principal: 
+              Service: 
+                - 'states.amazonaws.com'
+            Action: 
+              - 'sts:AssumeRole'
+      Policies: 
+        - PolicyName: 'StepFunctionsExecutionPolicy'
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              - Effect: 'Allow'
+                Action: 
+                  - 'lambda:InvokeFunction'
+                Resource: 
+                  - !GetAtt EonFileProcessorFunction.Arn
+                  - !GetAtt EonParquetProcessorFunction.Arn
+  EonStateMachine:
+    Type: 'AWS::Serverless::StateMachine'
+    Properties:
+      Definition: 
+        Comment: "A description of my state machine"
+        StartAt: "File-Processor"
+        States:
+          File-Processor:
+            Type: "Task"
+            Resource: "arn:aws:states:::lambda:invoke"
+            OutputPath: "$.Payload"
+            Parameters:
+              Payload.$: "$"
+              FunctionName: !GetAtt EonFileProcessorFunction.Arn
+            Retry:
+              - ErrorEquals:
+                  - "Lambda.ServiceException"
+                  - "Lambda.AWSLambdaException"
+                  - "Lambda.SdkClientException"
+                  - "Lambda.TooManyRequestsException"
+                IntervalSeconds: 1
+                MaxAttempts: 3
+                BackoffRate: 2
+            Next: "Wait"
+          Wait:
+            Type: "Wait"
+            Seconds: 30
+            Next: "Parquet-Processor"
+          Parquet-Processor:
+            Type: "Task"
+            Resource: "arn:aws:states:::lambda:invoke"
+            OutputPath: "$.Payload"
+            Parameters:
+              Payload.$: "$"
+              FunctionName: !GetAtt EonParquetProcessorFunction.Arn
+            Retry:
+              - ErrorEquals:
+                  - "Lambda.ServiceException"
+                  - "Lambda.AWSLambdaException"
+                  - "Lambda.SdkClientException"
+                  - "Lambda.TooManyRequestsException"
+                IntervalSeconds: 1
+                MaxAttempts: 3
+                BackoffRate: 2
+            Next: "Success"
+          Success:
+            Type: "Succeed"
+      Role: !GetAtt StateMachineExecutionRole.Arn
+  
+  EonSQSPollerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'EonSQSPoller'
+      CodeUri: sqs-poller-lambda/  
+      Handler: sqs_poller_lambda.lambda_handler  
+      Timeout: 180
+      Runtime: python3.12  
+      Role: !GetAtt EonLambdaSQSRole.Arn 
+  
+  EonFileProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'EonFileProcessorFunction'
+      CodeUri: en-file-processor-lambda/  
+      Handler: fileProcessor.lambda_handler  
+      Timeout: 180
+      Runtime: python3.12  
+      Role: !GetAtt EonLambdaFileProcessorRole.Arn
+
+  EonParquetProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'EonParquetProcessorFunction'
+      CodeUri: en-parquet-files-processor/  
+      Handler: parquet-files-processor.lambda_handler  
+      Timeout: 180
+      Runtime: python3.12  
+      Role: !GetAtt EonLambdaFileProcessorRole.Arn
+
+  EonTrxQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: eon-sqs-queue  
+      VisibilityTimeout: 60 
+      ReceiveMessageWaitTimeSeconds: 20
+
+  
+  EonTrxQueuePolicy:
+    Type: "AWS::SQS::QueuePolicy"
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Id: QueuePolicy
+        Statement:
+          - Sid: Allow-SendMessage-To-Queue-From-S3-Event-Notification
+            Effect: Allow
+            Principal:
+              Service: "s3.amazonaws.com"
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt EonTrxQueue.Arn
+      Queues:
+        - Ref: EonTrxQueue
+
+  
+  EonCloudWatchEventRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      ScheduleExpression: 'cron(0/5 * * * ? *)'
+      State: 'DISABLED'
+      Targets: 
+        - Arn: !GetAtt EonSQSPollerFunction.Arn
+          Id: 'EonSQSPollerFunction'
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EonSQSPollerFunction
+      Action: 'lambda:InvokeFunction'
+      Principal: 'events.amazonaws.com'
+      SourceArn: !GetAtt EonCloudWatchEventRule.Arn
+
+  S3BronzeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: eon-s3bronze
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: s3:ObjectCreated:Put
+            Queue: !GetAtt EonTrxQueue.Arn
+
+  S3SilverBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: eon-s3silver
+
+

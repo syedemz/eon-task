@@ -1,0 +1,76 @@
+[
+    {
+        "timestamp": "2024-07-10T22:04:20.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 157,
+            "value2": 182,
+            "value3": 19
+        }
+    },
+    {
+        "timestamp": "2024-07-10T22:04:23.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 18,
+            "value2": 140,
+            "value3": 9,
+            "value4": 210
+        }
+    },
+    {
+        "timestamp": "2024-07-10T22:04:26.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 121,
+            "value2": 38,
+            "value3": 52
+        }
+    },
+    {
+        "timestamp": "2024-07-10T22:04:29.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 88,
+            "value2": 113,
+            "value3": 167,
+            "value4": 48
+        }
+    },
+    {
+        "timestamp": "2024-07-10T22:04:32.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 61,
+            "value2": 199
+        }
+    },
+    {
+        "timestamp": "2024-07-10T22:04:35.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 223,
+            "value2": 92,
+            "value3": 145
+        }
+    },
+    {
+        "timestamp": "2024-07-10T22:04:38.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 104,
+            "value2": 171,
+            "value3": 13
+        }
+    },
+    {
+        "timestamp": "2024-07-10T22:04:41.512Z",
+        "dataAsset": "jupiter",
+        "iotreadings": {
+            "value1": 241,
+            "value2": 75,
+            "value3": 126,
+            "value4": 11
+        }
+    }
+]
