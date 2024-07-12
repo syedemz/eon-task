@@ -1,0 +1,5 @@
+numpy
+pandas
+paramiko
+boto3
+pytest

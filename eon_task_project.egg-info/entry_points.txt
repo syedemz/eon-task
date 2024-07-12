@@ -1,0 +1,2 @@
+[console_scripts]
+main_command = raw_data_files_s3_uploader:main

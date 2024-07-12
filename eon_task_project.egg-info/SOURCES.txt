@@ -1,0 +1,8 @@
+README.md
+setup.py
+eon_task_project.egg-info/PKG-INFO
+eon_task_project.egg-info/SOURCES.txt
+eon_task_project.egg-info/dependency_links.txt
+eon_task_project.egg-info/entry_points.txt
+eon_task_project.egg-info/requires.txt
+eon_task_project.egg-info/top_level.txt
