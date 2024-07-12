@@ -1,5 +1,6 @@
 import json
 from urllib.parse import unquote
+import os
 import boto3
 from botocore.exceptions import ClientError
 from utils import handle_aws_exceptions, handle_key_json_exceptions
@@ -9,11 +10,21 @@ from utils import handle_aws_exceptions, handle_key_json_exceptions
 sqs = boto3.client('sqs')
 stepfunctions_client = boto3.client('stepfunctions')
 
+
+sqs_queue_arn = os.environ['SQSQueueArn']
+step_function_arn = os.environ['SQSStepFunctionArn']
+
+# Get the queue URL using the ARN
+response = sqs.get_queue_url(QueueName=sqs_queue_arn.split(':')[-1])
+queue_url = response['QueueUrl']
+
+
 # SQS queue URL - replace with your actual queue URL
-QUEUE_URL = 'https://sqs.eu-central-1.amazonaws.com/929860961607/eon-sqs-queue'
+#QUEUE_URL = 'https://sqs.eu-central-1.amazonaws.com/929860961607/eon-sqs-queue'
+QUEUE_URL = queue_url
 
 # Replace with your actual ARN
-step_function_arn = "arn:aws:states:eu-central-1:929860961607:stateMachine:EonStateMachine-T8VZzJBZXawJ"  
+#step_function_arn = "arn:aws:states:eu-central-1:929860961607:stateMachine:EonStateMachine-T8VZzJBZXawJ"  
 
 @handle_aws_exceptions
 def lambda_handler(event, context):

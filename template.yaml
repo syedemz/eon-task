@@ -164,7 +164,11 @@ Resources:
       Handler: sqs_poller_lambda.lambda_handler  
       Timeout: 180
       Runtime: python3.12  
-      Role: !GetAtt EonLambdaSQSRole.Arn 
+      Role: !GetAtt EonLambdaSQSRole.Arn
+      Environment:
+        Variables:
+          SQSQueueArn: !GetAtt EonTrxQueue.Arn
+          StepFunctionArn: !GetAtt EonStateMachine.Arn
   
   EonFileProcessorFunction:
     Type: AWS::Serverless::Function
