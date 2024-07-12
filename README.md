@@ -16,7 +16,10 @@ In order to run the raw_data_files_s3_uploader.py and the unit tests, please ins
 
 In order to run the unit test please execute the shell script build.sh
 
-The following diagram explains the working of the project
+The whole working of the project once deployed is explained below
+
+raw_data_files_s3_uploader.py : uploads the raw json files into eon-s3bronze bucket every 15 minutes, this bucket is configured to send a notification to the sqs queue named "eon-sqs-queue", The lambda function "EonSQSPoller" polls the queue for incoming messages which contains the object key of the uploaded item, this lambda function is triggered every 5 mins by a cloudwatchevent trigger. Once this lambda function executes, it invokes the step function and passes the object key as input, the step function first executes the "EonFileProcessorFunction" lambda function which reads the json file and performs validation checks on it, if successful, it converts the json into a parquet file and pushes the file into the eon-s3silver bucket using a similar path, after that the step function delays for 5 mins and then executes the "EonParquetProcessorFunction" lambda function, which combines all the files on a given day folder into a single snappy compressed parquet file and pushes it into the combined folder inside the eon-s3silverbucket.
+
 
 
 
