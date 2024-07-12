@@ -12,7 +12,7 @@ stepfunctions_client = boto3.client('stepfunctions')
 
 
 sqs_queue_arn = os.environ['SQSQueueArn']
-step_function_arn = os.environ['SQSStepFunctionArn']
+step_function_arn = os.environ['StepFunctionArn']
 
 # Get the queue URL using the ARN
 response = sqs.get_queue_url(QueueName=sqs_queue_arn.split(':')[-1])

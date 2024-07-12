@@ -33,6 +33,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
         - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
   
   EonLambdaFileProcessorRole:
     Type: AWS::IAM::Role
