@@ -13,7 +13,7 @@ from utils import handle_sftp_connection_exception, handle_ssh_exceptions, handl
 # change the hostname and username accordingly
 HOSTNAME = "s-6fdeab7da1c64c3a9.server.transfer.eu-west-1.amazonaws.com"
 USERNAME = "test-user"
-PPK_KEY_PATH = "amadeus"
+PPK_KEY_PATH = "eon"
 
 # S3 details
 S3_BUCKET = ""
