@@ -10,7 +10,6 @@ sam build
 
 sam deploy --capabilities CAPABILITY_NAMED_IAM
 
-Once the template is deployed, please change the QUEUE_URL and step_function_arn variables inside the sqs_poller_lambda.py file, replace the values with the url of the new generated sqs queue and the arn of the step function.
 
 In order to run the raw_data_files_s3_uploader.py and the unit tests, please install the dependencies in the requirements.txt located in the root folder (this project was built using python3.12)
 
