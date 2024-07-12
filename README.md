@@ -16,5 +16,7 @@ In order to run the raw_data_files_s3_uploader.py and the unit tests, please ins
 
 In order to run the unit test please execute the shell script build.sh
 
+The following diagram explains the working of the project
+
 
 
