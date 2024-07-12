@@ -133,7 +133,7 @@ Resources:
             Next: "Wait"
           Wait:
             Type: "Wait"
-            Seconds: 30
+            Seconds: 300
             Next: "Parquet-Processor"
           Parquet-Processor:
             Type: "Task"
